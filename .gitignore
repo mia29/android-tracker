@@ -1,0 +1,76 @@
+# ============================================
+# Android & IntelliJ/Android Studio
+# ============================================
+
+# Gradle files
+.gradle/
+build/
+**/build/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# IntelliJ / Android Studio
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Keystore files (don’t commit your signing keys)
+*.jks
+*.keystore
+
+# Log files
+*.log
+
+# Android Studio captures
+captures/
+
+# Gradle caches and logs
+.gradle/
+.gradle-cache/
+.gradle/
+
+# Generated files
+app/*.apk
+app/*.aar
+app/*.ap_
+
+# NDK
+.obj/
+*.so
+
+# Others
+.DS_Store
+*.class
+bin/
+gen/
+out/
+
+# Firebase / Google Services config (optional)
+# Uncomment if you don’t want to commit your Firebase config
+# google-services.json
+# GoogleService-Info.plist
+
+# =======================
+# Optional - OS files
+# =======================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# =======================
+# JetBrains specific
+# =======================
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+
+# =======================
+# Misc
+# =======================
+*.orig
+*.rej
