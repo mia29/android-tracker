@@ -1,5 +1,6 @@
 package com.example.fortrace
 
+import android.app.ActivityManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -55,12 +56,13 @@ class FirstFragment : Fragment() {
                     val lat = intent.getDoubleExtra("latitude", 0.0)
                     val lon = intent.getDoubleExtra("longitude", 0.0)
                     val alt = intent.getDoubleExtra("altitude", 0.0)
-                    locationText.text = "Lat: $lat\nLon: $lon\n Al: $alt"
+                    "Lat: $lat\nLon: $lon\n Al: $alt".also { locationText.text = it }
                 }
 
                 "SERVER_RESPONSE" -> {
                     val status = intent.getStringExtra("response_message")
-                    responseMessageText.text = "Service: $status"
+                    val updatedAt = intent.getStringExtra("updated_at")
+                    "Service: $status \n $updatedAt".also { responseMessageText.text = it }
                 }
             }
         }
@@ -92,6 +94,13 @@ class FirstFragment : Fragment() {
         host = view.findViewById(R.id.host)
         port = view.findViewById(R.id.port)
 
+        // ✅ Restore values when fragment resumes
+        setPrefValue()
+
+        // ✅ Set button state correctly
+        isTracking = isLocationServiceRunning(requireContext())
+        toggleBtn.text = if (isTracking) "⏹ Stop Tracking" else "▶ Start Tracking"
+
         toggleBtn.setOnClickListener {
             if  (!isTracking) {
                 val host = host.text.toString().trim()
@@ -102,10 +111,23 @@ class FirstFragment : Fragment() {
                     return@setOnClickListener
                 }
 
+                // ✅ Save values for next time
+                val prefs = requireContext().getSharedPreferences("fortrace_prefs", Context.MODE_PRIVATE)
+                prefs.edit()
+                    .putString("last_host", host)
+                    .putString("last_port", port)
+                    .apply()
+
                 val serviceIntent = Intent(requireContext(), LocationService::class.java)
                 serviceIntent.putExtra("host", host)   // ✅ send to service
                 serviceIntent.putExtra("port", port)   // ✅ send to service
-                requireContext().startService(serviceIntent)
+
+                // ✅ Start the foreground service here
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    requireContext().startForegroundService(serviceIntent)
+                } else {
+                    requireContext().startService(serviceIntent)
+                }
 
                 Toast.makeText(
                     requireContext(),
@@ -139,12 +161,47 @@ class FirstFragment : Fragment() {
         }
         LocalBroadcastManager.getInstance(requireContext())
             .registerReceiver(locationReceiver, filter)
+        setPrefValue()
     }
 
     override fun onPause() {
         super.onPause()
         LocalBroadcastManager.getInstance(requireContext())
             .unregisterReceiver(locationReceiver)
+    }
+
+    fun isLocationServiceRunning(context: Context): Boolean {
+        val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        return manager.getRunningServices(Int.MAX_VALUE)
+            .any { it.service.className == LocationService::class.java.name }
+    }
+
+    fun setPrefValue(){
+        // ✅ Restore values when fragment resumes
+        val prefs = requireContext().getSharedPreferences("fortrace_prefs", Context.MODE_PRIVATE)
+        val savedHost = prefs.getString("last_host", "")
+        val savedPort = prefs.getString("last_port", "")
+
+        host.setText(savedHost)
+        port.setText(savedPort)
+
+        val prefsLoc = requireContext().getSharedPreferences("fortrace_loc_prefs", Context.MODE_PRIVATE)
+        val lastLat = prefsLoc.getString("last_latitude", "")
+        val lastLong = prefsLoc.getString("last_longitude", "")
+        val lastAlt = prefsLoc.getString("last_altitude", "")
+
+        "Lat: $lastLat \nLon: $lastLong\n Al: $lastAlt".also { locationText.text = it }
+
+        val prefsResp = requireContext().getSharedPreferences("fortrace_response_prefs", Context.MODE_PRIVATE)
+        val lastResp = prefsResp.getString("last_response", "")
+        val lastUpdate = prefsResp.getString("last_update", "")
+        "Service: $lastResp \n $lastUpdate".also { responseMessageText.text = it }
+
+
+        // ✅ Also check service state to set correct button text
+        isTracking = isLocationServiceRunning(requireContext())
+        toggleBtn.text = if (isTracking) "⏹ Stop Tracking" else "▶ Start Tracking"
+
     }
 
 }
