@@ -126,15 +126,7 @@ class LocationService : Service() {
                         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
                         val formatted = sdf.format(Date())
 
-                        val json = """{
-                          "android":1,
-                          "id":"$androidId",
-                          "date":"$formatted",
-                          "latitude":${location.latitude},
-                          "longitude":${location.longitude},
-                          "altitude":${location.altitude}
-                        }""".trimIndent()
-
+                        val json = """{"android":1, "id":"$androidId","date":"$formatted","latitude":${location.latitude}, "longitude":${location.longitude},"altitude":${location.altitude}}""".trimIndent()
                         writer.println(json)
                         writer.flush()
                         Log.d("LocationService", "📡 Sent location to TCP server")
